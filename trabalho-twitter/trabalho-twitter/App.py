@@ -9,7 +9,7 @@ from wordcloud import WordCloud, STOPWORDS
 import re
 import nltk
 
-service = Service((Path("./geckodriver").absolute()))
+service = Service("./geckodriver")
 driver = Firefox(service=service)
 
 def wait_element(tag, text):
@@ -59,7 +59,7 @@ def init_console():
     wait_load()
 
     all_txt = ""
-    for t in gen_twittes_txt(1000):
+    for t in gen_twittes_txt(500):
         all_txt += t
 
     nltk.download('stopwords')
