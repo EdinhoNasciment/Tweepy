@@ -12,8 +12,8 @@ import re
 
 PATH_GECKODRIVER_WINDOWS = Path("webdriver/geckodriver_windows.bin").absolute()
 PATH_GECKODRIVER_LINUX   = Path("webdriver/geckodriver_linux.bin").absolute()
-PATH_PNG_OUTPUT          = Path("img/cloud.png").absolute()
-FETCH_TWEETIES           = 200
+PATH_PNG_OUTPUT          = Path("cloud.png").absolute()
+FETCH_TWEETS             = 100
 
 service = None
 if(platform.system() == "Windows"):
@@ -58,23 +58,30 @@ def wait_load():
         wait_load = wait_element("span", ["What’s happening"])
         sleep(1)
 
-def main(latitude, longitude, raio):
+def main(latitude, longitude, raio, palavra_chave):
     args = {
         "latitude"  : latitude
     ,   "longitude" : longitude
     ,   "raio"      : raio
     }
-    url = f"https://twitter.com/search?q=geocode:{args['latitude']},{args['longitude']},{args['raio']}km&src=typed_query&f=live&lang=en-us"
+    url = f"https://twitter.com/search?q=geocode:{args['latitude']},{args['longitude']},{args['raio']}km {palavra_chave}&src=typed_query&f=live&lang=en-us"
     driver.get(url)
 
     wait_load()
 
     all_txt = ""
-    for t in gen_twittes_txt(FETCH_TWEETIES):
+    for t in gen_twittes_txt(FETCH_TWEETS):
+        print("=============================================")
+        print(t)
         all_txt += t
+        print("=============================================")
+
+    driver.close()
 
     nltk.download('stopwords')
     stopwords = nltk.corpus.stopwords.words('portuguese')
+    for word in "to;dia;hoje;lá;pra;vai;todo;vc;q;todo;i;amp;hj;n;utm_medium;p;tá;www1;ta;pq;http;https;Bom dia;tô;mano;D;então;X;Alguém;dá;fez;b".split(";"):
+        stopwords.append(word)
 
     cloud = WordCloud(
         background_color="white"
@@ -87,6 +94,7 @@ def main(latitude, longitude, raio):
 
     cloud.to_file(PATH_PNG_OUTPUT)
 
-    driver.close()
+main( -21.789341037025892, -48.17630560469828, 100, "ifsp")
 
-main( -21.789341037025892, -48.17630560469828, 10 )
+# TODO: Relacionar as palavras individuais com os twitties em si.
+# TODO: Arrumar looping infinito quando os twitties acabam.
