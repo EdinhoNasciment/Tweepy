@@ -1,15 +1,26 @@
-from pathlib import Path
-from selenium.webdriver import Firefox
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
-from bs4 import BeautifulSoup as Soup
-from time import sleep
-import matplotlib.pyplot as plt
 from wordcloud import WordCloud, STOPWORDS
-import re
+from selenium.webdriver import Firefox
+from bs4 import BeautifulSoup as Soup
+import matplotlib.pyplot as plt
+from pathlib import Path
+from time import sleep
+import platform
 import nltk
+import re
 
-service = Service("./geckodriver")
+PATH_GECKODRIVER_WINDOWS = Path("webdriver/geckodriver_windows.bin").absolute()
+PATH_GECKODRIVER_LINUX   = Path("webdriver/geckodriver_linux.bin").absolute()
+PATH_PNG_OUTPUT          = Path("img/cloud.png").absolute()
+FETCH_TWEETIES           = 200
+
+service = None
+if(platform.system() == "Windows"):
+    service = Service(PATH_GECKODRIVER_WINDOWS)
+else:
+    service = Service(PATH_GECKODRIVER_LINUX)
+
 driver = Firefox(service=service)
 
 def wait_element(tag, text):
@@ -47,11 +58,11 @@ def wait_load():
         wait_load = wait_element("span", ["What’s happening"])
         sleep(1)
 
-def init_console():
+def main(latitude, longitude, raio):
     args = {
-        "latitude"  : -21.789341037025892 
-    ,   "longitude" : -48.17630560469828
-    ,   "raio"      : 10
+        "latitude"  : latitude
+    ,   "longitude" : longitude
+    ,   "raio"      : raio
     }
     url = f"https://twitter.com/search?q=geocode:{args['latitude']},{args['longitude']},{args['raio']}km&src=typed_query&f=live&lang=en-us"
     driver.get(url)
@@ -59,7 +70,7 @@ def init_console():
     wait_load()
 
     all_txt = ""
-    for t in gen_twittes_txt(500):
+    for t in gen_twittes_txt(FETCH_TWEETIES):
         all_txt += t
 
     nltk.download('stopwords')
@@ -74,6 +85,8 @@ def init_console():
 
     cloud.generate(all_txt)
 
-    cloud.to_file("cloud.png")
+    cloud.to_file(PATH_PNG_OUTPUT)
 
-init_console()
+    driver.close()
+
+main( -21.789341037025892, -48.17630560469828, 10 )
