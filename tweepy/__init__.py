@@ -10,10 +10,16 @@ import platform
 import nltk
 import re
 
-PATH_GECKODRIVER_WINDOWS = Path("webdriver/geckodriver_windows.bin").absolute()
-PATH_GECKODRIVER_LINUX   = Path("webdriver/geckodriver_linux.bin").absolute()
-PATH_PNG_OUTPUT          = Path("cloud.png").absolute()
-FETCH_TWEETS             = 100
+PATH_GECKODRIVER_WINDOWS = Path("tweepy/webdriver/geckodriver_windows.bin").absolute()
+PATH_GECKODRIVER_LINUX   = Path("tweepy/webdriver/geckodriver_linux.bin").absolute()
+PATH_PNG_OUTPUT          = Path("tweepy/img/cloud.png").absolute()
+FETCH_TWEETS             = 10
+
+print(PATH_GECKODRIVER_LINUX)
+print(PATH_GECKODRIVER_WINDOWS)
+print(PATH_PNG_OUTPUT)
+
+nltk.download('stopwords')
 
 service = None
 if(platform.system() == "Windows"):
@@ -35,7 +41,11 @@ def wait_element(tag, text):
 
 def gen_twittes_txt(max_post):
     raw_html_map = {}
-    while(max_post > len(raw_html_map)):
+    size_mapper = {}
+    search = True
+    i = 1
+
+    while(search == True and max_post > len(raw_html_map)):
         soup = Soup(driver.page_source, "html.parser")
         for tweet in soup.find_all("article"):
             for article in tweet.find_all(attrs={"data-testid" : "tweetText"}):
@@ -45,9 +55,18 @@ def gen_twittes_txt(max_post):
                         full_txt += re.sub("<span.*?>|</span>|<.*?>", "", str(txt))
                 raw_html_map[full_txt] = None
 
-        sleep(1)
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        print(len(raw_html_map))
+        driver.execute_script(f"window.scrollTo(0, window.innerHeight*{i});")
+
+        try:
+            size_mapper[len(raw_html_map)] = size_mapper[len(raw_html_map)] + 1
+        except KeyError: 
+            size_mapper[len(raw_html_map)] = 1
+
+        if(size_mapper[len(raw_html_map)] > 4):
+            search = False
+
+        i += 1
+        print(size_mapper)
         sleep(2)
 
     return list(raw_html_map.keys())
@@ -57,6 +76,32 @@ def wait_load():
     while(wait_load):
         wait_load = wait_element("span", ["What’s happening"])
         sleep(1)
+
+def gen_stopwords():
+    stopwords = nltk.corpus.stopwords.words('portuguese')
+    for word in "to;dia;hoje;lá;pra;vai;todo;vc;q;todo;i;amp;hj;n;utm_medium;p;tá;www1;ta;pq;http;https;Bom dia;tô;mano;D;então;X;Alguém;dá;fez;b".split(";"):
+        stopwords.append(word)
+    return stopwords
+
+def get_tweets_words(stopword):
+    tweets_words = {}
+    all_txt = ""
+    tweets = gen_twittes_txt(FETCH_TWEETS)
+    driver.close()
+    for t in tweets:
+        print("="*len(t))
+        print(t)
+        print("="*len(t))
+
+        for word in t.split(" "):
+            for stop in stopword:
+                if(stop != word and word != ""):
+                    try:
+                        tweets_words[word][t] = None
+                    except KeyError:
+                        tweets_words[word] = { t : None }
+
+    return all_txt, tweets_words
 
 def main(latitude, longitude, raio, palavra_chave):
     args = {
@@ -69,23 +114,13 @@ def main(latitude, longitude, raio, palavra_chave):
 
     wait_load()
 
-    all_txt = ""
-    for t in gen_twittes_txt(FETCH_TWEETS):
-        print("=============================================")
-        print(t)
-        all_txt += t
-        print("=============================================")
+    stopword = gen_stopwords()
 
-    driver.close()
-
-    nltk.download('stopwords')
-    stopwords = nltk.corpus.stopwords.words('portuguese')
-    for word in "to;dia;hoje;lá;pra;vai;todo;vc;q;todo;i;amp;hj;n;utm_medium;p;tá;www1;ta;pq;http;https;Bom dia;tô;mano;D;então;X;Alguém;dá;fez;b".split(";"):
-        stopwords.append(word)
+    all_txt, tweets_words = get_tweets_words(stopword)
 
     cloud = WordCloud(
         background_color="white"
-    ,   stopwords=stopwords
+    ,   stopwords=stopword
     ,   height=600
     ,   width=400
     )
@@ -93,8 +128,9 @@ def main(latitude, longitude, raio, palavra_chave):
     cloud.generate(all_txt)
 
     cloud.to_file(PATH_PNG_OUTPUT)
+    for word in tweets_words.keys():
+        print(f"[{word}]:  ")
+        for j in tweets_words[word].keys():
+            print(f"    >>> {j} <<<")
 
-main( -21.789341037025892, -48.17630560469828, 100, "ifsp")
-
-# TODO: Relacionar as palavras individuais com os twitties em si.
-# TODO: Arrumar looping infinito quando os twitties acabam.
+main( -21.789341037025892, -48.17630560469828, 5, "")
