@@ -79,21 +79,26 @@ def wait_load():
 
 def gen_stopwords():
     stopwords = nltk.corpus.stopwords.words('portuguese')
-    for word in "to;dia;hoje;lá;pra;vai;todo;vc;q;todo;i;amp;hj;n;utm_medium;p;tá;www1;ta;pq;http;https;Bom dia;tô;mano;D;então;X;Alguém;dá;fez;b".split(";"):
+    for word in "to;dia;hoje;lá;pra;vai;todo;vc;&amp;q;todo;i;amp;hj;n;utm_medium;p;tá;www1;ta;pq;http;https;Bom dia;tô;mano;D;então;X;Alguém;dá;fez;b".split(";"):
         stopwords.append(word)
     return stopwords
 
 def get_tweets_words(stopword):
-    tweets_words = {}
-    all_txt = ""
     tweets = gen_twittes_txt(FETCH_TWEETS)
     driver.close()
+
+    all_txt = ""
+    tweets_words = {}
+
     for t in tweets:
         print("="*len(t))
         print(t)
         print("="*len(t))
 
-        for word in t.split(" "):
+        all_txt += t
+
+        for w in t.split(" "):
+            word = w.lstrip().rstrip()
             for stop in stopword:
                 if(stop != word and word != ""):
                     try:
@@ -102,6 +107,16 @@ def get_tweets_words(stopword):
                         tweets_words[word] = { t : None }
 
     return all_txt, tweets_words
+
+def gen_cloud_word(stopword, txt):
+    cloud = WordCloud(
+        background_color="white"
+    ,   stopwords=stopword
+    ,   height=600
+    ,   width=400
+    )
+    cloud.generate(txt)
+    cloud.to_file(PATH_PNG_OUTPUT)
 
 def main(latitude, longitude, raio, palavra_chave):
     args = {
@@ -118,16 +133,8 @@ def main(latitude, longitude, raio, palavra_chave):
 
     all_txt, tweets_words = get_tweets_words(stopword)
 
-    cloud = WordCloud(
-        background_color="white"
-    ,   stopwords=stopword
-    ,   height=600
-    ,   width=400
-    )
+    gen_cloud_word(stopword, all_txt)
 
-    cloud.generate(all_txt)
-
-    cloud.to_file(PATH_PNG_OUTPUT)
     for word in tweets_words.keys():
         print(f"[{word}]:  ")
         for j in tweets_words[word].keys():
