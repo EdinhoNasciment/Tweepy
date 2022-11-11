@@ -13,7 +13,8 @@ import re
 PATH_GECKODRIVER_WINDOWS = Path("tweepy/webdriver/geckodriver_windows.bin").absolute()
 PATH_GECKODRIVER_LINUX   = Path("tweepy/webdriver/geckodriver_linux.bin").absolute()
 PATH_PNG_OUTPUT          = Path("tweepy/img/cloud.png").absolute()
-FETCH_TWEETS             = 100
+PATH_MASK                = Path("tweepy/img/BrasaoAraraquara.png").absolute()
+FETCH_TWEETS             = 50 
 
 print(PATH_GECKODRIVER_LINUX)
 print(PATH_GECKODRIVER_WINDOWS)
@@ -113,10 +114,11 @@ def get_tweets_words(stopword):
 
 def gen_cloud_word(stopword, txt):
     cloud = WordCloud(
-        background_color="white"
+        background_color="black"
     ,   stopwords=stopword
     ,   height=600
     ,   width=400
+    #,   mask=PATH_MASK
     )
     cloud.generate(txt)
     cloud.to_file(PATH_PNG_OUTPUT)
@@ -144,3 +146,5 @@ def main(latitude, longitude, raio, palavra_chave):
             print(f"    >>> {j} <<<")
 
 main( -21.789341037025892, -48.17630560469828, 5, "")
+
+# TODO: Fix mask for img (numpy and "Image" lib for fix it)
