@@ -13,7 +13,7 @@ import re
 PATH_GECKODRIVER_WINDOWS = Path("tweepy/webdriver/geckodriver_windows.bin").absolute()
 PATH_GECKODRIVER_LINUX   = Path("tweepy/webdriver/geckodriver_linux.bin").absolute()
 PATH_PNG_OUTPUT          = Path("tweepy/img/cloud.png").absolute()
-FETCH_TWEETS             = 10
+FETCH_TWEETS             = 100
 
 print(PATH_GECKODRIVER_LINUX)
 print(PATH_GECKODRIVER_WINDOWS)
@@ -27,12 +27,15 @@ if(platform.system() == "Windows"):
 else:
     service = Service(PATH_GECKODRIVER_LINUX)
 
-driver = Firefox(service=service)
+FIREFOX_OPTIONS = Options()
+FIREFOX_OPTIONS.headless = True
+driver = Firefox(service=service, options=FIREFOX_OPTIONS)
+driver.set_window_size(1920, 1080)
 
 def wait_element(tag, text):
-    for t in text:
+    for _ in text:
         html_parser = Soup(driver.page_source, "html.parser")
-        element = html_parser.find("span", string=text)
+        element = html_parser.find(tag, string=text)
         print(element)
         if(element != None):
             return False
