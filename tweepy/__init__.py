@@ -3,7 +3,6 @@ from selenium.webdriver.firefox.options import Options
 from wordcloud import WordCloud, STOPWORDS
 from selenium.webdriver import Firefox
 from bs4 import BeautifulSoup as Soup
-import matplotlib.pyplot as plt
 from pathlib import Path
 from time import sleep
 import platform
@@ -13,7 +12,6 @@ import re
 PATH_GECKODRIVER_WINDOWS = Path("tweepy/webdriver/geckodriver_windows.bin").absolute()
 PATH_GECKODRIVER_LINUX   = Path("tweepy/webdriver/geckodriver_linux.bin").absolute()
 PATH_PNG_OUTPUT          = Path("tweepy/img/cloud.png").absolute()
-PATH_MASK                = Path("tweepy/img/BrasaoAraraquara.png").absolute()
 FETCH_TWEETS             = 50 
 
 print(PATH_GECKODRIVER_LINUX)
@@ -71,7 +69,7 @@ def gen_twittes_txt(max_post):
 
         i += 1
         print(size_mapper)
-        sleep(2)
+        sleep(1)
 
     return list(raw_html_map.keys())
 
@@ -114,13 +112,12 @@ def get_tweets_words(stopword):
 
 def gen_cloud_word(stopword, txt):
     cloud = WordCloud(
-        background_color="black"
+        background_color="white"
     ,   stopwords=stopword
     ,   height=600
     ,   width=400
-    #,   mask=PATH_MASK
-    )
-    cloud.generate(txt)
+    ).generate(txt)
+
     cloud.to_file(PATH_PNG_OUTPUT)
 
 def main(latitude, longitude, raio, palavra_chave):
@@ -140,11 +137,4 @@ def main(latitude, longitude, raio, palavra_chave):
 
     gen_cloud_word(stopword, all_txt)
 
-    for word in tweets_words.keys():
-        print(f"[{word}]:  ")
-        for j in tweets_words[word].keys():
-            print(f"    >>> {j} <<<")
-
 main( -21.789341037025892, -48.17630560469828, 5, "")
-
-# TODO: Fix mask for img (numpy and "Image" lib for fix it)
