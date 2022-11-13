@@ -12,7 +12,6 @@ import re
 PATH_GECKODRIVER_WINDOWS = Path("tweepy/webdriver/geckodriver_windows.bin").absolute()
 PATH_GECKODRIVER_LINUX   = Path("tweepy/webdriver/geckodriver_linux.bin").absolute()
 PATH_PNG_OUTPUT          = Path("tweepy/img/cloud.png").absolute()
-FETCH_TWEETS             = 50 
 
 print(PATH_GECKODRIVER_LINUX)
 print(PATH_GECKODRIVER_WINDOWS)
@@ -64,12 +63,12 @@ def gen_twittes_txt(max_post):
         except KeyError: 
             size_mapper[len(raw_html_map)] = 1
 
-        if(size_mapper[len(raw_html_map)] > 4):
+        if(size_mapper[len(raw_html_map)] > 9):
             search = False
 
         i += 1
         print(size_mapper)
-        sleep(1)
+        sleep(0.2)
 
     return list(raw_html_map.keys())
 
@@ -85,8 +84,8 @@ def gen_stopwords():
         stopwords.append(word)
     return stopwords
 
-def get_tweets_words(stopword):
-    tweets = gen_twittes_txt(FETCH_TWEETS)
+def get_tweets_words(stopword, tweets_q):
+    tweets = gen_twittes_txt(tweets_q)
     driver.close()
 
     all_txt = ""
@@ -120,7 +119,7 @@ def gen_cloud_word(stopword, txt):
 
     cloud.to_file(PATH_PNG_OUTPUT)
 
-def main(latitude, longitude, raio, palavra_chave):
+def main(latitude, longitude, raio, palavra_chave, tweets_quantity):
     args = {
         "latitude"  : latitude
     ,   "longitude" : longitude
@@ -133,8 +132,8 @@ def main(latitude, longitude, raio, palavra_chave):
 
     stopword = gen_stopwords()
 
-    all_txt, tweets_words = get_tweets_words(stopword)
+    all_txt, tweets_words = get_tweets_words(stopword, tweets_quantity)
 
     gen_cloud_word(stopword, all_txt)
 
-main( -21.789341037025892, -48.17630560469828, 5, "")
+main( -21.789341037025892, -48.17630560469828, 5, "", 200)
